@@ -134,20 +134,24 @@ void freeMemory(Buddy* buddy, PCB* pcb) {
     printf("未找到对应的内存块\n");
 }
 void printBuddy(Buddy* buddy) {
-    Block*block = buddy->block;
-    while(block != NULL){
-        
-        if(block ->isFree == 0){
-            printf("内存块大小为%d,内存块起点为%d,内存块状态为%d", block->size,block->start,block->isFree);
-            printf("进程ID为%d,进程大小%d\n",block->process->pid,block->process->size);
+    Block* block = buddy->block;
+    printf("----------------------------------------------------------------------\n");
+    printf("|  内存块起点  |  内存块大小  |  内存块状态  |  进程ID  |  进程大小  |\n");
+    printf("----------------------------------------------------------------------\n");
+
+    while (block != NULL) {
+        if (block->isFree == 0) {
+            printf("| %12d | %12d | %12d | %8d | %10d |\n", 
+                   block->start, block->size, block->isFree, block->process->pid, block->process->size);
+        } else {
+            printf("| %12d | %12d | %12d |        - |          - |\n", 
+                   block->start, block->size, block->isFree);
         }
-        else{
-            printf("内存块大小为%d,内存块起点为%d,内存块状态为%d\n", block->size,block->start,block->isFree);
-        }
+        printf("----------------------------------------------------------------------\n");
         block = block->next;
     }
-    return 0;
 }
+
 int main() {
     Buddy *buddy = (Buddy*)malloc(sizeof(Buddy));
     initBuddy(buddy, MAX_SIZE);
