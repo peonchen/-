@@ -2,38 +2,39 @@
 #include <stdlib.h>
 
 #define MAX_SIZE 4096
+#define times 10
 
-// è¿›ç¨‹æŽ§åˆ¶å—
+// ½ø³Ì¿ØÖÆ¿é
 typedef struct PCB {
-    int pid;    // è¿›ç¨‹ID
-    int size;   // å†…å­˜å¤§å°
-    int status; // è¿›ç¨‹çŠ¶æ€ï¼ˆæ¯”å¦‚è¿è¡Œã€é˜»å¡žç­‰ï¼‰
+    int pid;    // ½ø³ÌID
+    int size;   // ÄÚ´æ´óÐ¡
+    int status; // ½ø³Ì×´Ì¬£¨±ÈÈçÔËÐÐ¡¢×èÈûµÈ£©
     int super;
     int ntime;
     int rtime;
 } PCB;
 
-// å†…å­˜å—
+// ÄÚ´æ¿é
 typedef struct Block {
-    int size;       // å†…å­˜å—å¤§å°
-    int start;      // å†…å­˜å—èµ·å§‹åœ°å€
-    int isFree;     // æ˜¯å¦ç©ºé—²
-    PCB* process;   // æŒ‡å‘è¿›ç¨‹æŽ§åˆ¶å—çš„æŒ‡é’ˆ
-    struct Block* next; // æŒ‡å‘ä¸‹ä¸€ä¸ªå†…å­˜å—çš„æŒ‡é’ˆ
+    int size;       // ÄÚ´æ¿é´óÐ¡
+    int start;      // ÄÚ´æ¿éÆðÊ¼µØÖ·
+    int isFree;     // ÊÇ·ñ¿ÕÏÐ
+    PCB* process;   // Ö¸Ïò½ø³Ì¿ØÖÆ¿éµÄÖ¸Õë
+    struct Block* next; // Ö¸ÏòÏÂÒ»¸öÄÚ´æ¿éµÄÖ¸Õë
 } Block;
 
-// ä¼™ä¼´ç»“æž„
+// »ï°é½á¹¹
 typedef struct Buddy {
-    int size;           // å†…å­˜å—å¤§å°
-    Block* block;       // æŒ‡å‘å†…å­˜å—çš„æŒ‡é’ˆ
+    int size;           // ÄÚ´æ¿é´óÐ¡
+    Block* block;       // Ö¸ÏòÄÚ´æ¿éµÄÖ¸Õë
 } Buddy;
 
-// åˆå§‹åŒ–ä¼™ä¼´ç³»ç»Ÿ
+// ³õÊ¼»¯»ï°éÏµÍ³
 void initBuddy(Buddy* buddy, int size) {
     buddy->size = MAX_SIZE;
     buddy->block = (Block*)malloc(sizeof(Block));
     if(buddy->block == NULL) {
-        printf("å†…å­˜åˆ†é…å¤±è´¥");
+        printf("ÄÚ´æ·ÖÅäÊ§°Ü");
         return;
     }
     buddy->block->next = NULL;
@@ -59,24 +60,45 @@ int splitBlock(Block* block){
     block->next = newBlock;
     return 1;
 }
-//åˆå¹¶å†…å­˜
+//ºÏ²¢ÄÚ´æ
 void mergeBlock(Buddy* buddy, Block* block) {
+    if (block == NULL) {
+        return;
+    }
+
     int x = block->start;
-    if(x % (block->size * 2) == 0){
+    // ºÏ²¢µ±Ç°¿éºÍºóÒ»¸ö¿é
+    if (x % (block->size * 2) == 0) {
         Block* nextBlock = block->next;
-        if(nextBlock->isFree == 1){
-            
+        if (nextBlock != NULL && nextBlock->isFree == 1 && nextBlock->size == block -> size && nextBlock->start == block->start + block->size) {
+            block->size *= 2;
+            block->next = nextBlock->next;
+            free(nextBlock);
+            mergeBlock(buddy, block);
+        }
+    } else {
+        // ºÏ²¢µ±Ç°¿éºÍÇ°Ò»¸ö¿é
+        Block* prevBlock = buddy->block;
+        while (prevBlock != NULL && prevBlock->next != block) {
+            prevBlock = prevBlock->next;
+        }
+        if (prevBlock != NULL && prevBlock->isFree == 1 && prevBlock->size == block->size && prevBlock->start + prevBlock->size == block->start) {
+            prevBlock->size *= 2;
+            prevBlock->next = block->next;
+            free(block);
+            mergeBlock(buddy, prevBlock);
         }
     }
 }
-//åˆ†é…å†…å­˜
+
+//·ÖÅäÄÚ´æ
 void allocateMemory(Buddy* buddy,PCB *pcb) {
     Block* block = buddy->block;
     int powerPCB = 0;
     int powerBuffy = 0;
     while(pcb->size > block->size ||block ->isFree == 0){
         if(block->next == NULL){
-            printf("å†…å­˜ä¸è¶³");
+            printf("ÄÚ´æ²»×ã");
             return;
         }
         block = block->next;
@@ -95,31 +117,55 @@ void allocateMemory(Buddy* buddy,PCB *pcb) {
     block->process = pcb;
     block->isFree = 0;
     }
-int main() {
-    Buddy *buddy = (Buddy*)malloc(sizeof(Buddy));
-    initBuddy(buddy, MAX_SIZE);
-    for(int i = 0; i < 15; i++){
-        PCB* pcb = (PCB*)malloc(sizeof(PCB));
-        pcb -> pid = i;
-        pcb->size = rand() % 100 + 1;
-        pcb->status = 1;
-        pcb->super = rand() % 5 + 1;
-        pcb->ntime = rand() % 7 + 1;
-        printf("è¿›ç¨‹%dç”³è¯·å†…å­˜å¤§å°ä¸º%d\n", pcb->pid, pcb->size);
-        allocateMemory(buddy,pcb);
+void freeMemory(Buddy* buddy, PCB* pcb) {
+    Block* block = buddy->block;
+    // ÕÒµ½¶ÔÓ¦½ø³ÌµÄÄÚ´æ¿é
+    while (block != NULL) {
+        if (block->process == pcb) {
+            block->isFree = 1;
+            block->process = NULL;
+            mergeBlock(buddy, block);
+            return;
+        }
+        block = block->next;
     }
-    printf("OK");
+    printf("Î´ÕÒµ½¶ÔÓ¦µÄÄÚ´æ¿é\n");
+}
+void printBuddy(Buddy* buddy) {
     Block*block = buddy->block;
     while(block != NULL){
         
         if(block ->isFree == 0){
-            printf("å†…å­˜å—å¤§å°ä¸º%d,å†…å­˜å—èµ·ç‚¹ä¸º%d,å†…å­˜å—çŠ¶æ€ä¸º%d", block->size,block->start,block->isFree);
-            printf("è¿›ç¨‹IDä¸º%d,è¿›ç¨‹å¤§å°%d\n",block->process->pid,block->process->size);
+            printf("ÄÚ´æ¿é´óÐ¡Îª%d,ÄÚ´æ¿éÆðµãÎª%d,ÄÚ´æ¿é×´Ì¬Îª%d", block->size,block->start,block->isFree);
+            printf("½ø³ÌIDÎª%d,½ø³Ì´óÐ¡%d\n",block->process->pid,block->process->size);
         }
         else{
-            printf("å†…å­˜å—å¤§å°ä¸º%d,å†…å­˜å—èµ·ç‚¹ä¸º%d,å†…å­˜å—çŠ¶æ€ä¸º%d\n", block->size,block->start,block->isFree);
+            printf("ÄÚ´æ¿é´óÐ¡Îª%d,ÄÚ´æ¿éÆðµãÎª%d,ÄÚ´æ¿é×´Ì¬Îª%d\n", block->size,block->start,block->isFree);
         }
         block = block->next;
+    }
+    return 0;
+}
+int main() {
+    Buddy *buddy = (Buddy*)malloc(sizeof(Buddy));
+    initBuddy(buddy, MAX_SIZE);
+    PCB* pcbs[times];
+    for (int i = 0; i < times; i++) {
+        pcbs[i] = (PCB*)malloc(sizeof(PCB));
+        pcbs[i]->pid = i;
+        pcbs[i]->size = rand() % 100 + 1;
+        pcbs[i]->status = 1;
+        pcbs[i]->super = rand() % 5 + 1;
+        pcbs[i]->ntime = rand() % 7 + 1;
+        printf("½ø³Ì%dÉêÇëÄÚ´æ´óÐ¡Îª%d\n", pcbs[i]->pid, pcbs[i]->size);
+        allocateMemory(buddy, pcbs[i]);
+    }
+    printBuddy(buddy);
+    // Ä£ÄâÊÍ·ÅÒ»Ð©½ø³ÌµÄÄÚ´æ
+    for (int i = 0; i < times; i ++) {
+        printf("ÊÍ·Å½ø³Ì%dµÄÄÚ´æ\n", pcbs[i]->pid);
+        freeMemory(buddy, pcbs[i]);
+        printBuddy(buddy);
     }
     return 0;
 }
