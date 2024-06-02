@@ -2,18 +2,16 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-#define MAX_SIZE 4096
-#define times 10
-#define sleep_time 2
+#define MAX_SIZE 4096   // 内存块的最大大小
+#define times 13        // 进程数量
+#define sleep_time 2   // 进程执行时间
+#define MAX_PCBZISE 200 // 进程控制块的最大大小
 
 // 进程控制块
 typedef struct PCB {
     int pid;    // 进程ID
     int size;   // 内存大小
     int status; // 进程状态（比如运行、阻塞等）
-    int super;
-    int ntime;
-    int rtime;
 } PCB;
 
 // 内存块
@@ -151,7 +149,34 @@ void printBuddy(Buddy* buddy) {
         block = block->next;
     }
 }
-
+//延迟模拟
+// int main() {
+//     Buddy *buddy = (Buddy*)malloc(sizeof(Buddy));
+//     initBuddy(buddy, MAX_SIZE);
+//     char ch; 
+//     PCB* pcbs[times];
+//     for (int i = 0; i < times; i++) {
+//         pcbs[i] = (PCB*)malloc(sizeof(PCB));
+//         pcbs[i]->pid = i;
+//         pcbs[i]->size = rand() % MAX_PCBZISE + 1;
+//         pcbs[i]->status = 1;
+//         printf("进程%d申请内存大小为%d\n", pcbs[i]->pid, pcbs[i]->size);
+//         allocateMemory(buddy, pcbs[i]);
+//     }
+//     printBuddy(buddy);
+//     printf("\n 按任一键继续......"); 
+//     ch=getchar(); 
+//     // 模拟释放一些进程的内存
+//     for (int i = 0; i < times; i ++) {
+//         sleep(sleep_time);
+//         system("cls");
+//         printf("释放进程%d的内存\n", pcbs[i]->pid);
+//         freeMemory(buddy, pcbs[i]);
+//         printBuddy(buddy);
+//     }
+//     return 0;
+// }
+//一条龙版本
 int main() {
     Buddy *buddy = (Buddy*)malloc(sizeof(Buddy));
     initBuddy(buddy, MAX_SIZE);
@@ -161,16 +186,12 @@ int main() {
         pcbs[i]->pid = i;
         pcbs[i]->size = rand() % 100 + 1;
         pcbs[i]->status = 1;
-        pcbs[i]->super = rand() % 5 + 1;
-        pcbs[i]->ntime = rand() % 7 + 1;
         printf("进程%d申请内存大小为%d\n", pcbs[i]->pid, pcbs[i]->size);
         allocateMemory(buddy, pcbs[i]);
     }
     printBuddy(buddy);
     // 模拟释放一些进程的内存
     for (int i = 0; i < times; i ++) {
-        sleep(sleep_time);
-        system("cls");
         printf("释放进程%d的内存\n", pcbs[i]->pid);
         freeMemory(buddy, pcbs[i]);
         printBuddy(buddy);
