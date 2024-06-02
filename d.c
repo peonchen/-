@@ -1,8 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 #define MAX_SIZE 4096
 #define times 10
+#define sleep_time 2
 
 // 进程控制块
 typedef struct PCB {
@@ -76,7 +78,7 @@ void mergeBlock(Buddy* buddy, Block* block) {
             free(nextBlock);
             mergeBlock(buddy, block);
         }
-    } else {
+    }else if(x % (block->size *2) == block->size) {
         // 合并当前块和前一个块
         Block* prevBlock = buddy->block;
         while (prevBlock != NULL && prevBlock->next != block) {
@@ -163,6 +165,8 @@ int main() {
     printBuddy(buddy);
     // 模拟释放一些进程的内存
     for (int i = 0; i < times; i ++) {
+        sleep(sleep_time);
+        system("cls");
         printf("释放进程%d的内存\n", pcbs[i]->pid);
         freeMemory(buddy, pcbs[i]);
         printBuddy(buddy);
