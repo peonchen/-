@@ -20,9 +20,13 @@ class SimpleFileSystem:
         if os.path.exists(self.filename):
             with open(self.filename, 'r') as f:
                 self.file_system = json.load(f)
+                # print("测试")
+                # self.printself()
                 self.current_directory = self.file_system["root"]["contents"]
                 for directory in self.path[1:]:
                     self.current_directory = self.current_directory[directory]["contents"]
+                # print("测试")
+                # self.printself()
 
     def save_file_system(self):
         with open(self.filename, 'w') as f:
@@ -62,6 +66,13 @@ class SimpleFileSystem:
         else:
             self.current_directory[directory_name] = {"type":"directory", "contents":{}}
             self.save_file_system()
+    def print_file(self,filename):
+        if filename in self.current_directory and self.current_directory[filename]["type"] == "file":
+            print(self.current_directory[filename]["content"])
+        else:
+            print(f"File '{filename}' not found.")
+    def showpath(self):
+        return "/"+"/".join(self.path)
 
     def change_directory(self, directory_name):
         if directory_name == "..":
@@ -83,42 +94,42 @@ class SimpleFileSystem:
     # 列目录
     def list_directory(self):
         return list(self.current_directory.keys())
-fs = SimpleFileSystem("root.txt")
-print(fs.list_directory())
-fs.create_directory("dir1")
-fs.create_directory("dir2")
-fs.printself()
-fs.change_directory("dir1")
-fs.printself()
-fs.create_file("file1.txt", "Hello, World!")
-fs.create_file("file2.txt", "This is a test file.")
-fs.printself()
-fs.create_directory("dir1_dir")
-print("目录")
-print(fs.list_directory())
-fs.change_directory("dir1_dir")
-fs.printself()
-fs.create_file("file3.txt", "This is another test file.")
-fs.printself()
-print("1")
-fs.change_directory("..")
-fs.printself()
-print("2")
-fs.change_directory("..")
-fs.printself()
-fs.change_directory("dir2")
-fs.printself()
-fs.create_file("file4.txt", "This is a new test file.")
-fs.printself()
-fs.create_file("file5.txt", "This is another new test file.")
-fs.printself()
-fs.create_directory("dir2_dir")
-fs.printself()
-fs.change_directory("dir2_dir")
-fs.create_file("file6.txt", "This is a test file in dir2_dir.")
-fs.printself()
-fs.change_directory("..")
-fs.printself()
-fs.change_directory("..")
-fs.printself()
-print(fs.list_directory())
+if __name__ == "__main__":
+    fs = SimpleFileSystem("root.txt")
+    while True:
+        command = input("$ ")
+        argnum = len(command.split())
+        if command == "exit" and argnum == 1:
+            break
+        elif command.startswith("cd") and argnum == 2:
+            directory_name = command.split(" ")[1]
+            fs.change_directory(directory_name)
+        elif command.startswith("mkdir") and argnum == 2:
+            directory_name = command.split(" ")[1]
+            fs.create_directory(directory_name)
+        elif command.startswith("touch") and argnum == 3:
+            filename = command.split(" ")[1]
+            content = " ".join(command.split(" ")[2:])
+            fs.create_file(filename, content)
+        elif command.startswith("vim") and argnum == 3:
+            filename = command.split(" ")[1]
+            content = " ".join(command.split(" ")[2:])
+            fs.write_file(filename, content)        
+        elif command.startswith("ls") and argnum == 1:
+            print(fs.list_directory())
+        elif command.startswith("cat") and argnum == 2:
+            filename = command.split(" ")[1]
+            fs.print_file(filename)
+        elif command.startswith("rm") and argnum == 3:
+            if command.split(" ")[1] == "-d":
+                directory_name = command.split(" ")[2]
+                fs.delete_directory(directory_name)
+            elif command.split(" ")[1] == "-f":
+                filename = command.split(" ")[2]
+                fs.delete_file(filename)
+            else:
+                print("Invalid command.")
+        elif command.startswith("pwd") and argnum == 1:
+            print(fs.showpath())
+        else:
+            print("Invalid command.")
