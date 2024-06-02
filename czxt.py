@@ -6,9 +6,9 @@ class SimpleFileSystem:
         # 文件名
         self.filename = filename
         # 根目录
-        self.file_system = {"root": {}}
+        self.file_system = {"root": {"type":"directory", "contents":{}}}
         # 当前路径内容
-        self.current_directory = self.file_system["root"]
+        self.current_directory = self.file_system["root"]["contents"]
         # 路径
         self.path = ["root"]
         # 加载文件系统
@@ -20,9 +20,9 @@ class SimpleFileSystem:
         if os.path.exists(self.filename):
             with open(self.filename, 'r') as f:
                 self.file_system = json.load(f)
-                self.current_directory = self.file_system["root"]
+                self.current_directory = self.file_system["root"]["contents"]
                 for directory in self.path[1:]:
-                    self.current_directory = self.current_directory[directory]
+                    self.current_directory = self.current_directory[directory]["contents"]
 
     def save_file_system(self):
         with open(self.filename, 'w') as f:
@@ -32,25 +32,25 @@ class SimpleFileSystem:
         if filename in self.current_directory:
             print(f"File '{filename}' already exists.")
         else:
-            self.current_directory[filename] = content
+            self.current_directory[filename] = {"type":"file", "content":content}
             self.save_file_system()
 
     def read_file(self, filename):
-        if filename in self.current_directory:
-            return self.current_directory[filename]
+        if filename in self.current_directory and self.current_directory[filename]["type"] == "file":
+            return self.current_directory[filename]["content"]
         else:
             print(f"File '{filename}' not found.")
             return None
 
     def write_file(self, filename, content):
-        if filename in self.current_directory:
-            self.current_directory[filename] = content
+        if filename in self.current_directory and self.current_directory[filename]["type"] == "file":
+            self.current_directory[filename]["content"] = content
             self.save_file_system()
         else:
             print(f"File '{filename}' not found.")
 
     def delete_file(self, filename):
-        if filename in self.current_directory:
+        if filename in self.current_directory and self.current_directory[filename]["type"] == "file":
             del self.current_directory[filename]
             self.save_file_system()
         else:
@@ -60,21 +60,21 @@ class SimpleFileSystem:
         if directory_name in self.current_directory:
             print(f"Directory '{directory_name}' already exists.")
         else:
-            self.current_directory[directory_name] = {}
+            self.current_directory[directory_name] = {"type":"directory", "contents":{}}
             self.save_file_system()
 
     def change_directory(self, directory_name):
         if directory_name == "..":
             if len(self.path) > 1:
                 self.path.pop()
-                self.current_directory = self.file_system["root"]
+                self.current_directory = self.file_system["root"]["contents"]
                 for directory in self.path[1:]:
-                    self.current_directory = self.current_directory[directory]
+                    self.current_directory = self.current_directory[directory]["contents"]
             else:
                 print("Already at root directory.")
         elif directory_name in self.current_directory:
-            if isinstance(self.current_directory[directory_name], dict):
-                self.current_directory = self.current_directory[directory_name]
+            if self.current_directory[directory_name]["type"] == "directory":
+                self.current_directory = self.current_directory[directory_name]["contents"]
                 self.path.append(directory_name)
             else:
                 print(f"'{directory_name}' is not a directory.")
