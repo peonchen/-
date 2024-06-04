@@ -30,18 +30,14 @@ class BankerAlgorithm:
         for j in range(self.r):
             self.available[j] -= request[j]
             self.allocation[process][j] += request[j]
-            self.need[process][j] -= request[j]
-        # is_safe, sequence = self.check_safe()
-        # for j in range(self.r):
-        #     self.available[j] += request[j]
-        #     self.allocation[process][j] -= request[j]
-        #     self.need[process][j] += request[j]
-        
-        return self.check_safe()            
+            self.need[process][j] -= request[j]        
+        return self.check_safe()    
+
     def check_safe(self):
         self.WA = []
         work = self.available[:]
         self.safe = []
+        self.work = []
         self.finish = [False for i in range(self.p)]
         while True:
             flag = False
@@ -65,36 +61,61 @@ class BankerAlgorithm:
         return all(self.finish), self.safe
     def show(self):
         print("系统资源\t\t",self.available)
-        print("-"*90)
+        print("-"*100)
         print("进程\tMax\t\tWork\t\tAllocation\tNeed\t\tWork+Allocation\t\tFinish")
         for safe, i  in zip(self.safe,range(self.p)):
-            print("-"*90)
+            print("-"*100)
             print(f"{safe}\t{self.max[safe]}\t{self.work[i]}\t{self.allocation[safe]}\t{self.need[safe]}\t{self.WA[i]}\t\t{self.finish[safe]}")
-        print("-"*90)    
+        print("-"*100)    
+# if __name__ == "__main__":
+#     p = 5
+#     r = 3
+#     available = [3, 3, 2]
+#     max_claim = [[7, 5, 3], [3, 2, 2], [9, 0, 2], [2, 2, 2], [4, 3, 3]]
+#     allocation = [[0, 1, 0], [2, 0, 0], [3, 0, 2], [2, 1, 1], [0, 0, 2]]
+#     # available = [2,1,0]
+#     # max_claim = [[7,5,3],[3,2,2],[9,0,2],[2,2,2],[4,3,3]]
+#     # allocation = [[0,3,0],[3,0,2],[3,0,2],[2,1,1],[0,0,2]]
+#     banker = BankerAlgorithm(p,r,available,max_claim,allocation)
+#     is_safe, sequence = banker.check_safe()
+#     if is_safe:
+#         print("系统处于安全状态，安全序列为:", sequence)
+#         banker.show()
+#     else:
+#         print("系统处于不安全状态")
+#     process = 1
+#     request = [1,0,2]
+#     is_safe,sequence=banker.check_safe_with_request(request,process)
+#     if is_safe:
+#         print("系统处于安全状态，安全序列为:", sequence)
+#         banker.show()
+#     else:
+#         print("系统处于不安全状态")
+# 交互版
 if __name__ == "__main__":
-    p = 5
-    r = 3
-    available = [3, 3, 2]
-    max_claim = [[7, 5, 3], [3, 2, 2], [9, 0, 2], [2, 2, 2], [4, 3, 3]]
-    allocation = [[0, 1, 0], [2, 0, 0], [3, 0, 2], [2, 1, 1], [0, 0, 2]]
-    # available = [1, 1, 2]
-    # max_claim = [[3, 2, 2],[6, 1, 3],[3, 1, 4],[4, 2, 2]]
-    # allocation = [[1, 0, 0], [5, 1, 1],[2, 1, 1],[0, 0, 2]]
-    banker = BankerAlgorithm(p,r,available,max_claim,allocation)
+    p = int(input("请输入进程数量:"))  # 将输入转换为整数
+    r = int(input("请输入资源数量:"))  # 将输入转换为整数
+    available = input("请输入系统资源:")
+    available = list(map(int, available.split(",")))  # 将输入转换为整数列表
+    max_claim = []
+    allocation = []
+    for i in range(p):
+        max_claim.append(list(map(int, input(f"请输入进程{i+1}的最大需求:").split(","))))  # 将字符串转换为整数列表
+        allocation.append(list(map(int, input(f"请输入进程{i+1}的已分配资源:").split(","))))  # 将字符串转换为整数列表
+    banker = BankerAlgorithm(p, r, available, max_claim, allocation)
     is_safe, sequence = banker.check_safe()
     if is_safe:
         print("系统处于安全状态，安全序列为:", sequence)
         banker.show()
+        while True:
+            process = int(input("请输入要申请资源的进程:"))
+            request = list(map(int, input(f"请输入进程{process}申请的资源A:").split(",")))
+            is_safe, sequence = banker.check_safe_with_request(request, process)
+            if is_safe:
+                print("系统处于安全状态，安全序列为:", sequence)
+                banker.show()
+            else:
+                print("系统处于不安全状态")
+                break
     else:
         print("系统处于不安全状态")
-    process = 1
-    request = [1, 0, 2]
-    is_safe,sequence=banker.check_safe_with_request(request,process)
-    if is_safe:
-        print("系统处于安全状态，安全序列为:", sequence)
-        banker.show()
-    else:
-        print("系统处于不安全状态")
-
-
-
